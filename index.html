@@ -2,10 +2,31 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+            name="viewport"
+            content="width=device-width,initial-scale=1,viewport-fit=cover"
+        />
         <title>Split Expenses</title>
+
         <style>
+            :root {
+                --bg: #fafafa;
+                --card: #ffffff;
+                --border: #e6e6e6;
+                --text: #111;
+                --muted: #666;
+                --shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+                --radius: 18px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
             body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--text);
                 font-family:
                     system-ui,
                     -apple-system,
@@ -13,116 +34,272 @@
                     Roboto,
                     Arial,
                     sans-serif;
-                margin: 24px;
             }
 
             .wrap {
-                max-width: 900px;
+                max-width: 980px;
                 margin: 0 auto;
+                padding: 16px;
+                padding-bottom: calc(16px + env(safe-area-inset-bottom));
+            }
+
+            header {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 12px;
+                margin: 6px 0 14px;
             }
 
             h1 {
-                margin-bottom: 16px;
+                margin: 0;
+                font-size: 22px;
+                letter-spacing: -0.2px;
+            }
+
+            .subtle {
+                font-size: 13px;
+                color: var(--muted);
+                margin: 0;
             }
 
             .grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 16px;
+                align-items: start;
             }
 
             .card {
-                border: 1px solid #ddd;
-                border-radius: 12px;
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
                 padding: 14px;
+                box-shadow: var(--shadow);
+            }
+
+            h2 {
+                margin: 0 0 10px;
+                font-size: 18px;
+            }
+
+            h3 {
+                margin: 10px 0 6px;
+                font-size: 16px;
             }
 
             label {
                 display: block;
-                font-size: 14px;
+                font-size: 13px;
                 margin: 10px 0 6px;
+                color: #222;
             }
 
             input,
             select,
             button {
-                font-size: 14px;
-                padding: 10px;
+                font-size: 16px;
+                /* prevents iOS zoom-on-focus */
+                padding: 12px;
             }
 
             input,
             select {
                 width: 100%;
-                box-sizing: border-box;
-                border: 1px solid #ccc;
-                border-radius: 10px;
+                border: 1px solid #d6d6d6;
+                border-radius: 12px;
+                background: #fff;
+                outline: none;
             }
 
-            button {
-                border: 1px solid #ccc;
-                border-radius: 10px;
-                background: #f7f7f7;
-                cursor: pointer;
-            }
-
-            button:hover {
-                background: #efefef;
+            input:focus,
+            select:focus {
+                border-color: #bdbdbd;
             }
 
             .row {
                 display: flex;
                 gap: 10px;
                 align-items: end;
+                flex-wrap: wrap;
             }
 
             .row > * {
                 flex: 1;
+                min-width: 180px;
             }
 
             .row .small {
-                flex: 0.6;
+                flex: 0.75;
+                min-width: 140px;
+            }
+
+            .actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 12px;
+            }
+
+            button {
+                border: 1px solid #d6d6d6;
+                border-radius: 12px;
+                background: #f4f4f4;
+                cursor: pointer;
+                min-height: 44px;
+                width: 100%;
+            }
+
+            button:hover {
+                background: #ededed;
+            }
+
+            button:active {
+                transform: translateY(1px);
             }
 
             .muted {
-                color: #666;
+                color: var(--muted);
                 font-size: 13px;
+            }
+
+            .result {
+                font-weight: 750;
+                font-size: 16px;
+                line-height: 1.25;
+                margin: 0 0 6px;
+            }
+
+            hr {
+                border: none;
+                border-top: 1px solid var(--border);
+                margin: 12px 0;
+            }
+
+            .twoCols {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 14px;
+            }
+
+            .totalline {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 6px;
+            }
+
+            .pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 10px;
+                border: 1px solid var(--border);
+                border-radius: 999px;
+                font-size: 13px;
+                color: #222;
+                background: #fcfcfc;
+                white-space: nowrap;
+            }
+
+            .tableWrap {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 12px;
             }
 
             table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 10px;
+                margin-top: 6px;
+                min-width: 340px;
             }
 
-            th,
             td {
-                text-align: left;
-                padding: 8px;
-                border-bottom: 1px solid #eee;
+                padding: 10px 6px;
+                border-bottom: 1px solid #f0f0f0;
+                vertical-align: middle;
             }
 
-            .right {
+            td.right {
                 text-align: right;
+                white-space: nowrap;
             }
 
-            .result {
-                font-weight: 600;
-                font-size: 16px;
+            .nameCell {
+                max-width: 220px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
-            .danger {
-                color: #b00020;
+            .removeBtn {
+                width: auto;
+                padding: 10px 12px;
             }
 
-            .ok {
-                color: #0b6b0b;
+            /* Mobile: single column + sticky action bar */
+            @media (max-width: 820px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .twoCols {
+                    grid-template-columns: 1fr;
+                }
+
+                .wrap {
+                    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+                }
+
+                .actions {
+                    display: none;
+                }
+
+                .stickyBar {
+                    position: fixed;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+                    background: rgba(250, 250, 250, 0.92);
+                    backdrop-filter: blur(10px);
+                    border-top: 1px solid var(--border);
+                    z-index: 50;
+                }
+
+                .stickyInner {
+                    max-width: 980px;
+                    margin: 0 auto;
+                    display: flex;
+                    gap: 10px;
+                }
+
+                .stickyInner button {
+                    width: 100%;
+                }
+            }
+
+            /* Desktop: hide sticky bar */
+            @media (min-width: 821px) {
+                .stickyBar {
+                    display: none;
+                }
             }
         </style>
     </head>
 
     <body>
         <div class="wrap">
-            <h1>Split Expenses (Py & Lukas)</h1>
+            <header>
+                <div>
+                    <h1>Split Expenses (Py &amp; Lukas)</h1>
+                    <p class="subtle">
+                        Saved locally in your browser (refresh-safe).
+                    </p>
+                </div>
+                <span class="pill" id="savedIndicator">Saved</span>
+            </header>
 
             <div class="grid">
                 <div class="card">
@@ -130,7 +307,7 @@
 
                     <div class="row">
                         <div class="small">
-                            <label>Person</label>
+                            <label for="person">Person</label>
                             <select id="person">
                                 <option value="py">Py</option>
                                 <option value="lukas">Lukas</option>
@@ -138,45 +315,63 @@
                         </div>
 
                         <div>
-                            <label>Expense name</label>
+                            <label for="name">Expense name</label>
                             <input
                                 id="name"
                                 placeholder="e.g. hyra, netflix, viaplay"
+                                autocomplete="off"
                             />
                         </div>
 
                         <div class="small">
-                            <label>Amount (kr)</label>
-                            <input id="amount" type="number" min="0" />
+                            <label for="amount">Amount (kr)</label>
+                            <input
+                                id="amount"
+                                type="number"
+                                min="0"
+                                inputmode="numeric"
+                                placeholder="0"
+                            />
                         </div>
                     </div>
 
-                    <button id="addBtn" style="margin-top: 12px">Add</button>
-                    <button id="resetBtn" style="margin-top: 12px">
-                        Reset
-                    </button>
+                    <div class="actions">
+                        <button id="addBtn" type="button">Add</button>
+                        <button id="resetBtn" type="button">Reset</button>
+                    </div>
+
+                    <p class="muted" style="margin: 10px 2px 0">
+                        Tip: Press <b>Enter</b> in the amount field to add.
+                    </p>
                 </div>
 
                 <div class="card">
                     <h2>Result</h2>
-                    <div id="summary" class="result"></div>
-                    <p id="note" class="muted"></p>
+                    <p id="summary" class="result"></p>
+                    <p id="note" class="muted" style="margin: 0"></p>
 
                     <hr />
 
-                    <div class="grid" style="grid-template-columns: 1fr 1fr">
+                    <div class="twoCols">
                         <div>
-                            <h3>Py</h3>
-                            <div class="muted">
-                                Total: <span id="pyTotal">0</span> kr
+                            <div class="totalline">
+                                <h3 style="margin: 0">Py</h3>
+                                <span class="pill"
+                                    >Total:
+                                    <b><span id="pyTotal">0</span></b> kr</span
+                                >
                             </div>
                             <div id="pyTable"></div>
                         </div>
 
                         <div>
-                            <h3>Lukas</h3>
-                            <div class="muted">
-                                Total: <span id="lukasTotal">0</span> kr
+                            <div class="totalline">
+                                <h3 style="margin: 0">Lukas</h3>
+                                <span class="pill"
+                                    >Total:
+                                    <b><span id="lukasTotal">0</span></b>
+                                    kr</span
+                                >
                             </div>
                             <div id="lukasTable"></div>
                         </div>
@@ -185,9 +380,16 @@
             </div>
         </div>
 
+        <!-- Sticky action bar for phones -->
+        <div class="stickyBar">
+            <div class="stickyInner">
+                <button id="addBtnSticky" type="button">Add</button>
+                <button id="resetBtnSticky" type="button">Reset</button>
+            </div>
+        </div>
+
         <script>
             const STORAGE_KEY = "split-expenses-state-v1";
-
             const state = { py: [], lukas: [] };
 
             function loadState() {
@@ -204,12 +406,36 @@
                 }
             }
 
+            function flashSaved() {
+                const el = document.getElementById("savedIndicator");
+                el.textContent = "Saved";
+                el.style.opacity = "1";
+                el.style.transform = "scale(1)";
+                clearTimeout(flashSaved._t);
+                flashSaved._t = setTimeout(() => {
+                    el.style.opacity = "0.85";
+                }, 700);
+            }
+
             function saveState() {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                flashSaved();
             }
 
             function totalFor(who) {
-                return state[who].reduce((s, e) => s + e.amount, 0);
+                return state[who].reduce(
+                    (s, e) => s + (Number(e.amount) || 0),
+                    0,
+                );
+            }
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#39;");
             }
 
             function renderTable(who) {
@@ -217,32 +443,36 @@
                     return "<p class='muted'>No expenses</p>";
 
                 return `
-      <table>
-        <tbody>
-          ${state[who]
-              .map(
-                  (e, i) => `
-            <tr>
-              <td>${e.name}</td>
-              <td class="right">${e.amount} kr</td>
-              <td class="right">
-                <button onclick="removeExpense('${who}', ${i})">Remove</button>
-              </td>
-            </tr>
-          `,
-              )
-              .join("")}
-        </tbody>
-      </table>
-    `;
+        <div class="tableWrap">
+          <table>
+            <tbody>
+              ${state[who]
+                  .map(
+                      (e, i) => `
+                <tr>
+                  <td class="nameCell">${escapeHtml(e.name)}</td>
+                  <td class="right">${Number(e.amount).toFixed(0)} kr</td>
+                  <td class="right">
+                    <button class="removeBtn" type="button" onclick="removeExpense('${who}', ${i})">Remove</button>
+                  </td>
+                </tr>
+              `,
+                  )
+                  .join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
             }
 
             function calculate() {
                 const pyTotal = totalFor("py");
                 const lukasTotal = totalFor("lukas");
 
-                document.getElementById("pyTotal").textContent = pyTotal;
-                document.getElementById("lukasTotal").textContent = lukasTotal;
+                document.getElementById("pyTotal").textContent =
+                    pyTotal.toFixed(0);
+                document.getElementById("lukasTotal").textContent =
+                    lukasTotal.toFixed(0);
 
                 const diff = pyTotal - lukasTotal;
 
@@ -256,8 +486,10 @@
                 }
 
                 document.getElementById("summary").textContent = summary;
+
+                // Keep your original note logic
                 document.getElementById("note").textContent =
-                    `Lukas transfers ${lukasTotal + 390} kr to the Hyra account.`;
+                    `Lukas transfers ${(lukasTotal + 390).toFixed(0)} kr to the Hyra account.`;
 
                 document.getElementById("pyTable").innerHTML =
                     renderTable("py");
@@ -272,11 +504,12 @@
                 const name = document.getElementById("name").value.trim();
                 const amount = Number(document.getElementById("amount").value);
 
-                if (!name || amount <= 0) return;
+                if (!name || !(amount > 0)) return;
 
                 state[who].push({ name, amount });
                 document.getElementById("name").value = "";
                 document.getElementById("amount").value = "";
+                document.getElementById("name").focus();
                 calculate();
             }
 
@@ -286,12 +519,24 @@
                 calculate();
             };
 
-            document.getElementById("addBtn").onclick = addExpense;
-            document.getElementById("resetBtn").onclick = () => {
+            function resetAll() {
                 state.py = [];
                 state.lukas = [];
                 calculate();
-            };
+            }
+
+            // Wire buttons
+            document.getElementById("addBtn").onclick = addExpense;
+            document.getElementById("resetBtn").onclick = resetAll;
+            document.getElementById("addBtnSticky").onclick = addExpense;
+            document.getElementById("resetBtnSticky").onclick = resetAll;
+
+            // Enter to add when typing amount
+            document
+                .getElementById("amount")
+                .addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") addExpense();
+                });
 
             loadState();
             calculate();
