@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Split Expenses</title>
+        <style>
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                margin: 24px;
+            }
+
+            .wrap {
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                margin-bottom: 16px;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+
+            .card {
+                border: 1px solid #ddd;
+                border-radius: 12px;
+                padding: 14px;
+            }
+
+            label {
+                display: block;
+                font-size: 14px;
+                margin: 10px 0 6px;
+            }
+
+            input,
+            select,
+            button {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            input,
+            select {
+                width: 100%;
+                box-sizing: border-box;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+            }
+
+            button {
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                background: #f7f7f7;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background: #efefef;
+            }
+
+            .row {
+                display: flex;
+                gap: 10px;
+                align-items: end;
+            }
+
+            .row > * {
+                flex: 1;
+            }
+
+            .row .small {
+                flex: 0.6;
+            }
+
+            .muted {
+                color: #666;
+                font-size: 13px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+            th,
+            td {
+                text-align: left;
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .right {
+                text-align: right;
+            }
+
+            .result {
+                font-weight: 600;
+                font-size: 16px;
+            }
+
+            .danger {
+                color: #b00020;
+            }
+
+            .ok {
+                color: #0b6b0b;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="wrap">
+            <h1>Split Expenses (Py & Lukas)</h1>
+
+            <div class="grid">
+                <div class="card">
+                    <h2>Add expense</h2>
+
+                    <div class="row">
+                        <div class="small">
+                            <label>Person</label>
+                            <select id="person">
+                                <option value="py">Py</option>
+                                <option value="lukas">Lukas</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Expense name</label>
+                            <input
+                                id="name"
+                                placeholder="e.g. hyra, netflix, viaplay"
+                            />
+                        </div>
+
+                        <div class="small">
+                            <label>Amount (kr)</label>
+                            <input id="amount" type="number" min="0" />
+                        </div>
+                    </div>
+
+                    <button id="addBtn" style="margin-top: 12px">Add</button>
+                    <button id="resetBtn" style="margin-top: 12px">
+                        Reset
+                    </button>
+                </div>
+
+                <div class="card">
+                    <h2>Result</h2>
+                    <div id="summary" class="result"></div>
+                    <p id="note" class="muted"></p>
+
+                    <hr />
+
+                    <div class="grid" style="grid-template-columns: 1fr 1fr">
+                        <div>
+                            <h3>Py</h3>
+                            <div class="muted">
+                                Total: <span id="pyTotal">0</span> kr
+                            </div>
+                            <div id="pyTable"></div>
+                        </div>
+
+                        <div>
+                            <h3>Lukas</h3>
+                            <div class="muted">
+                                Total: <span id="lukasTotal">0</span> kr
+                            </div>
+                            <div id="lukasTable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const STORAGE_KEY = "split-expenses-state-v1";
+
+            const state = { py: [], lukas: [] };
+
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    state.py = Array.isArray(parsed.py) ? parsed.py : [];
+                    state.lukas = Array.isArray(parsed.lukas)
+                        ? parsed.lukas
+                        : [];
+                } catch {
+                    // ignore corrupt data
+                }
+            }
+
+            function saveState() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+
+            function totalFor(who) {
+                return state[who].reduce((s, e) => s + e.amount, 0);
+            }
+
+            function renderTable(who) {
+                if (!state[who].length)
+                    return "<p class='muted'>No expenses</p>";
+
+                return `
+      <table>
+        <tbody>
+          ${state[who]
+              .map(
+                  (e, i) => `
+            <tr>
+              <td>${e.name}</td>
+              <td class="right">${e.amount} kr</td>
+              <td class="right">
+                <button onclick="removeExpense('${who}', ${i})">Remove</button>
+              </td>
+            </tr>
+          `,
+              )
+              .join("")}
+        </tbody>
+      </table>
+    `;
+            }
+
+            function calculate() {
+                const pyTotal = totalFor("py");
+                const lukasTotal = totalFor("lukas");
+
+                document.getElementById("pyTotal").textContent = pyTotal;
+                document.getElementById("lukasTotal").textContent = lukasTotal;
+
+                const diff = pyTotal - lukasTotal;
+
+                let summary = "";
+                if (diff > 0) {
+                    summary = `Lukas must pay ${(diff / 2).toFixed(0)} kr to Py.`;
+                } else if (diff < 0) {
+                    summary = `Py must pay ${(-diff / 2).toFixed(0)} kr to Lukas.`;
+                } else {
+                    summary = "Py and Lukas have the same expenses.";
+                }
+
+                document.getElementById("summary").textContent = summary;
+                document.getElementById("note").textContent =
+                    `Lukas transfers ${lukasTotal + 390} kr to the Hyra account.`;
+
+                document.getElementById("pyTable").innerHTML =
+                    renderTable("py");
+                document.getElementById("lukasTable").innerHTML =
+                    renderTable("lukas");
+
+                saveState();
+            }
+
+            function addExpense() {
+                const who = document.getElementById("person").value;
+                const name = document.getElementById("name").value.trim();
+                const amount = Number(document.getElementById("amount").value);
+
+                if (!name || amount <= 0) return;
+
+                state[who].push({ name, amount });
+                document.getElementById("name").value = "";
+                document.getElementById("amount").value = "";
+                calculate();
+            }
+
+            // Must be global because it's called from inline onclick=""
+            window.removeExpense = function (who, i) {
+                state[who].splice(i, 1);
+                calculate();
+            };
+
+            document.getElementById("addBtn").onclick = addExpense;
+            document.getElementById("resetBtn").onclick = () => {
+                state.py = [];
+                state.lukas = [];
+                calculate();
+            };
+
+            loadState();
+            calculate();
+        </script>
+    </body>
+</html>
