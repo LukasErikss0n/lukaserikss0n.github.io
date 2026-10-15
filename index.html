@@ -60,14 +60,6 @@
                 text-transform: uppercase;
             }
 
-            h1 {
-                margin: 2px 0 0;
-                font-size: 28px;
-                font-weight: 800;
-                letter-spacing: -0.9px;
-                line-height: 1.1;
-            }
-
             .total-card {
                 border-radius: 22px;
                 padding: 22px 20px 20px;
@@ -114,6 +106,24 @@
                 font-size: 14px;
                 color: var(--ink3);
                 line-height: 1.4;
+            }
+
+            .bar {
+                display: flex;
+                gap: 3px;
+                height: 10px;
+                margin-top: 16px;
+            }
+
+            .bar:empty {
+                display: none;
+            }
+
+            .bar i {
+                display: block;
+                min-width: 6px;
+                border-radius: 5px;
+                background: var(--c);
             }
 
             .panel {
@@ -236,9 +246,10 @@
                 align-items: center;
                 gap: 12px;
                 padding: 12px 14px;
-                background: var(--surface);
+                background: var(--t);
                 border-radius: 14px;
                 border: 1px solid var(--line);
+                border-left: 5px solid var(--c);
             }
 
             .row-name {
@@ -312,7 +323,6 @@
         <main class="app">
             <header>
                 <div class="eyebrow">Hyra account</div>
-                <h1>What to transfer</h1>
             </header>
 
             <section class="total-card" aria-live="polite">
@@ -322,6 +332,7 @@
                     <span class="total-unit">kr</span>
                 </div>
                 <div class="total-sub" id="total-sub">No expenses yet.</div>
+                <div class="bar" id="bar"></div>
             </section>
 
             <section class="panel">
@@ -355,6 +366,17 @@
         <script>
             (function () {
                 var STORAGE_KEY = "hyra.v1";
+                var PALETTE = [
+                    { c: "#3f6b4e", t: "#e6eee7" },
+                    { c: "#3a5878", t: "#e4eaf1" },
+                    { c: "#b0573a", t: "#f8e7e1" },
+                    { c: "#7a4a6b", t: "#f1e6ee" },
+                    { c: "#8a6a2e", t: "#f2eadc" },
+                    { c: "#2f7f86", t: "#e0f0f1" }
+                ];
+                function color(e) {
+                    return PALETTE[(Number(e.c) || 0) % PALETTE.length];
+                }
                 var expenses = load();
 
                 var $ = function (id) { return document.getElementById(id); };
@@ -391,6 +413,16 @@
                     $("count").textContent = "Expenses · " + expenses.length;
                     $("reset").hidden = expenses.length === 0;
 
+                    var bar = $("bar");
+                    bar.textContent = "";
+                    expenses.forEach(function (e) {
+                        var seg = document.createElement("i");
+                        seg.style.flex = String(Math.max(Number(e.amount) || 0, 0.0001));
+                        seg.style.setProperty("--c", color(e).c);
+                        seg.title = (e.name || "—") + " · " + fmt(e.amount) + " kr";
+                        bar.appendChild(seg);
+                    });
+
                     var list = $("list");
                     list.textContent = "";
 
@@ -405,6 +437,8 @@
                     expenses.slice().sort(function (a, b) { return b.t - a.t; }).forEach(function (e) {
                         var row = document.createElement("div");
                         row.className = "row";
+                        row.style.setProperty("--c", color(e).c);
+                        row.style.setProperty("--t", color(e).t);
 
                         var name = document.createElement("div");
                         name.className = "row-name";
@@ -453,6 +487,7 @@
                         name: nameEl.value.trim() || "Expense",
                         amount: a,
                         when: new Date().toLocaleDateString("sv-SE", { month: "short", day: "numeric" }),
+                        c: expenses.length ? (Number(expenses[expenses.length - 1].c) || 0) + 1 : 0,
                         t: Date.now()
                     });
                     save();
